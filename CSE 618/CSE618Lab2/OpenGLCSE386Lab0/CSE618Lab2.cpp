@@ -150,7 +150,7 @@ void drawHorizontalLine(glm::vec2 p1, glm::vec2 p2, GLubyte rgb[]) {
 }
 
 void drawDiagonalLine(glm::vec2 p1, glm::vec2 p2, GLubyte rgb[]) {
-	if (p2.x < p1.x && p2.y < p1.y) {
+	if ( p2.y > p1.y) {
 		swap(p1, p2);
 	}
 
@@ -167,25 +167,49 @@ void BresLine(glm::vec2 p1, glm::vec2 p2, GLubyte rgb[]) {
 	} else if (p1.x == p1.y && p2.x == p2.y) {
 		drawDiagonalLine(p1,p2,rgb);
 	}
-
-	// handle negative slope line, by swapping points
-	if (p1.y > p2.y) {
-		swap(p1, p2);
+	double m = (p2.y - p1.y) / (p2.x - p1.x);
+	bool slope = m < 0;
+	if (p1.x > p2.x) {
+		std::swap(p1,p2);
 	}
 
 	int x = p1.x, y = p1.y;
 	int dx = p2.x - p1.x, dy = p2.y - p1.y;
-	int dT = 2 * (dy -dx), dS = 2  * dy;
-	int d = 2 * dy - dx;
-	for (; x < p2.x; x++) {
-		setPixel(x,y,rgb);
-		if (d < 0) {
-			d+= dS;
-		} else {
-			y++;
-			d+=dT;
+	int dT = 2 * (dy-dx);
+	int dS = 2 * dy;
+	int d = 2 * (dy - dx);
+
+	if (slope) {
+		x = p2.x, y = p2.y;
+		dx = p2.x - p1.x, dy = p1.y - p2.y;
+		dT = 2 * (dy-dx);
+		dS = 2 * dy;
+		d = 2 * (dy - dx);
+
+		while (x > p1.x) {
+			x--;
+			if (d < 0) {
+				d = d + dS;
+			} else {
+				y++;
+				d = d + dT;
+			}
+			setPixel(x, y, rgb);
 		}
+	}  else {
+		while (x < p2.x) {
+			x++;
+			if (d < 0) {
+				d = d + dS;
+			} else {
+				y++;
+				d = d + dT;
+			}
+			setPixel(x, y, rgb);
+		} 
 	}
+
+	
 }
 
 void BresLineHomogenous(glm::vec3 p1, glm::vec3 p2, GLubyte rgb[]) {
@@ -198,7 +222,7 @@ void BresLineHomogenous(glm::vec3 p1, glm::vec3 p2, GLubyte rgb[]) {
 }
 
 
-void problem11() {
+void problem12() {
 	GLubyte white[] = {128, 128, 128};
 	GLubyte blue[] = {0, 0, 255};
 	glm::vec2 p1(50,75), p2(130,200), shift(100,75);
@@ -206,34 +230,6 @@ void problem11() {
 	p1 += shift;
 	p2 += shift;
 	BresLine(p1,p2,white);
-}
-
-void problem12() {
-	GLubyte white[] = {128, 128, 128};
-	GLubyte blue[] = {0, 0, 255};
-	const int NUMBER_OF_2D_HOMOGENOUS = 3;
-	// I hate visual studio.
-	std::vector<glm::vec3> transMatrix;
-	transMatrix.push_back(glm::vec3(1,0,100));
-	transMatrix.push_back(glm::vec3(0,1,75));
-	transMatrix.push_back(glm::vec3(0,0,1));
-	
-
-	glm::vec3 p1(50,75,1),p2(130,200,1), shiftP1(0,0,0), shiftP2(0,0,0);
-	BresLineHomogenous(p1,p2,blue);
-	for (int i = 0; i < transMatrix.size(); i++) {
-		int temp = 0;
-		for (int j = 0; j < NUMBER_OF_2D_HOMOGENOUS; j++) {
-			temp += transMatrix[i][j] * p1[j]; 
-		}
-		shiftP1[i] = temp;
-		temp = 0;
-		for (int j = 0; j < NUMBER_OF_2D_HOMOGENOUS; j++) {
-			temp += transMatrix[i][j] * p2[j]; 
-		}
-		shiftP2[i] = temp;
-	}
-	BresLineHomogenous(shiftP1,shiftP2,white);
 }
 
 void problem13() {
@@ -245,7 +241,7 @@ void problem13() {
 	transMatrix.push_back(glm::vec3(1,0,100));
 	transMatrix.push_back(glm::vec3(0,1,125));
 	transMatrix.push_back(glm::vec3(0,0,1));
-	
+
 	glm::vec3 p1(50,75,1),p2(130,200,1), shiftP1(0,0,0), shiftP2(0,0,0);
 	BresLineHomogenous(p1,p2,blue);
 	for (int i = 0; i < transMatrix.size(); i++) {
@@ -261,19 +257,96 @@ void problem13() {
 		shiftP2[i] = temp;
 	}
 	BresLineHomogenous(shiftP1,shiftP2,white);
-
 }
 
 void problem14() {
-
+	
 }
+
+void drawTriangle(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLubyte rgb[]) {
+	//BresLineHomogenous(p1,p2,rgb);
+	BresLineHomogenous(p2,p3,rgb);
+	BresLineHomogenous(p3,p1,rgb);
+}
+
+
 
 void problem15() {
+	GLubyte red[] = {255,0,0};
+	GLubyte cyan[] = {100,100,255};
+	glm::vec3 v1(100,200,1), v2(200,300,1), v3(300,200,1);
+	//drawTriangle(v1,v2,v3, red);
+	double angle = glm::radians(30.0);
+	/*glm::mat3x3 rotationMatrix;
+	rotationMatrix[0] = glm::vec3(glm::cos(angle),glm::sin(angle), 0.0);
+	rotationMatrix[1] = glm::vec3(-1 * glm::sin(angle), glm::cos(angle), 1.0);
+	rotationMatrix[2] =	glm::vec3(0.0, 0.0, 1.0);
+	*/
 
+
+	glm::vec3 midPoint(150,250,1);// (((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
+	// std::cout << toString(midPoint) << std::endl;
+	//v1 -= midPoint;
+	//v2 -= midPoint;
+	//v3 -= midPoint;
+	
+	glm::mat3x3 m(glm::cos(angle), -1 * glm::sin(angle), 0,
+			  glm::sin(angle), glm::cos(angle), 0,
+			  0, 0, 1);
+
+	v1 = m * v1;
+	v3 = m * v3;
+	v2 = m * v2;
+	//v1 += midPoint;
+	//v2 += midPoint;
+	// v3 += midPoint;
+	
+	std::cout << toString(v1) << " " << toString(v2) << " " << toString(v3) << std::endl;
+
+	//drawTriangle(v1,v2,v3, cyan);
 }
 
-void problem16() {
 
+
+void problem16() {
+	GLubyte red[] = {255,0,0};
+	GLubyte cyan[] = {100,100,255};
+	glm::vec3 v1(100,200,1), v2(200,300,1), v3(300,200,1);
+	//drawTriangle(v1,v2,v3, red);
+	double angle = glm::radians(30.0);
+	/*glm::mat3x3 rotationMatrix;
+	rotationMatrix[0] = glm::vec3(glm::cos(angle),glm::sin(angle), 0.0);
+	rotationMatrix[1] = glm::vec3(-1 * glm::sin(angle), glm::cos(angle), 1.0);
+	rotationMatrix[2] =	glm::vec3(0.0, 0.0, 1.0);
+	*/
+
+	glm::mat3 mat(glm::cos(angle),glm::sin(angle), 0,
+			      -1 * glm::sin(angle), glm::cos(angle), 0,
+			      0, 0, 1);
+	
+	glm::mat3 transmat(1, 0, 0,
+					   0, 1, 0,
+					   50, 50, 1);
+
+	glm::vec3 midPoint(150,250,1);// (((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
+	// std::cout << toString(midPoint) << std::endl;
+	//v1 -= midPoint;
+	//v2 -= midPoint;
+	//v3 -= midPoint;
+	// v1 = transmat * v1;
+	// v3 = transmat * v3;
+	// v2 = transmat * v2;
+	v1 = mat * v1;
+	v2 = mat * v2;
+	v3 = mat * v3;
+	std::cout << toString(v1) << " " << toString(v2) << " " << toString(v3) << std::endl;
+
+	//v1 += midPoint;
+	//v2 += midPoint;
+	// v3 += midPoint;
+	
+
+	drawTriangle(v1,v2,v3, cyan);
 }
 
 void problem17() {
@@ -294,9 +367,11 @@ static void RenderSceneCB() {
 
 	// TODO
 	// Your rendering code
-	problem11();
+	problem12();
 	problem12();
 	problem13();
+	//problem15();
+	problem16();
 
 	// Flush all drawing commands and swapbuffers
 	glutSwapBuffers();
