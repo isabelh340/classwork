@@ -169,9 +169,13 @@ void BresLine(glm::vec2 p1, glm::vec2 p2, GLubyte rgb[]) {
 	}
 	double m = (p2.y - p1.y) / (p2.x - p1.x);
 	bool slope = m < 0;
-	if (p1.x > p2.x) {
+	m = abs(m);
+	if (m > 1) {
+		std::swap(p1.x, p1.y);
+		std::swap(p2.x, p2.y);
+	} if (p1.x > p2.x) {
 		std::swap(p1,p2);
-	}
+	} 
 
 	int x = p1.x, y = p1.y;
 	int dx = p2.x - p1.x, dy = p2.y - p1.y;
@@ -194,7 +198,11 @@ void BresLine(glm::vec2 p1, glm::vec2 p2, GLubyte rgb[]) {
 				y++;
 				d = d + dT;
 			}
-			setPixel(x, y, rgb);
+			if (m > 1) {
+				setPixel(y,x,rgb);
+			} else {
+				setPixel(x, y, rgb);
+			}		
 		}
 	}  else {
 		while (x < p2.x) {
@@ -205,7 +213,11 @@ void BresLine(glm::vec2 p1, glm::vec2 p2, GLubyte rgb[]) {
 				y++;
 				d = d + dT;
 			}
-			setPixel(x, y, rgb);
+			if (m > 1) {
+				setPixel(y,x,rgb);
+			} else {
+				setPixel(x, y, rgb);
+			}
 		} 
 	}
 
@@ -264,7 +276,7 @@ void problem14() {
 }
 
 void drawTriangle(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLubyte rgb[]) {
-	//BresLineHomogenous(p1,p2,rgb);
+	BresLineHomogenous(p1,p2,rgb);
 	BresLineHomogenous(p2,p3,rgb);
 	BresLineHomogenous(p3,p1,rgb);
 }
@@ -275,7 +287,7 @@ void problem15() {
 	GLubyte red[] = {255,0,0};
 	GLubyte cyan[] = {100,100,255};
 	glm::vec3 v1(100,200,1), v2(200,300,1), v3(300,200,1);
-	//drawTriangle(v1,v2,v3, red);
+	drawTriangle(v1,v2,v3, red);
 	double angle = glm::radians(30.0);
 	/*glm::mat3x3 rotationMatrix;
 	rotationMatrix[0] = glm::vec3(glm::cos(angle),glm::sin(angle), 0.0);
@@ -284,26 +296,25 @@ void problem15() {
 	*/
 
 
-	glm::vec3 midPoint(150,250,1);// (((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
+	glm::vec3 midPoint(((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
 	// std::cout << toString(midPoint) << std::endl;
-	//v1 -= midPoint;
-	//v2 -= midPoint;
-	//v3 -= midPoint;
+	v1 -= midPoint;
+	v2 -= midPoint;
+	v3 -= midPoint;
 	
-	glm::mat3x3 m(glm::cos(angle), -1 * glm::sin(angle), 0,
-			  glm::sin(angle), glm::cos(angle), 0,
+	glm::mat3x3 m(glm::cos(angle),glm::sin(angle), 0,
+			   -1 * glm::sin(angle), glm::cos(angle), 0,
 			  0, 0, 1);
 
 	v1 = m * v1;
 	v3 = m * v3;
 	v2 = m * v2;
-	//v1 += midPoint;
-	//v2 += midPoint;
-	// v3 += midPoint;
-	
+	v1 += midPoint;
+	v2 += midPoint;
+	v3 += midPoint;
 	std::cout << toString(v1) << " " << toString(v2) << " " << toString(v3) << std::endl;
 
-	//drawTriangle(v1,v2,v3, cyan);
+	drawTriangle(v1,v2,v3, cyan);
 }
 
 
@@ -367,11 +378,11 @@ static void RenderSceneCB() {
 
 	// TODO
 	// Your rendering code
-	problem12();
-	problem12();
-	problem13();
-	//problem15();
-	problem16();
+	//problem12();
+	//problem12();
+	//problem13();
+	problem15();
+	//problem16();
 
 	// Flush all drawing commands and swapbuffers
 	glutSwapBuffers();
