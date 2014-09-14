@@ -1,4 +1,4 @@
-﻿Build started 9/13/2014 11:38:59 AM.
+﻿Build started 9/13/2014 8:56:10 PM.
      1>Project "C:\Users\z\Documents\GitHub\classwork\CSE 618\CSE618Lab2\OpenGLCSE386Lab0\OpenGLCSE386Lab0.vcxproj" on node 2 (Build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\CSE618Lab2.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -30,4 +30,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.41
+Time Elapsed 00:00:01.58
