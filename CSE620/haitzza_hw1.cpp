@@ -65,29 +65,39 @@ void tfid(const std::string& searchFile,
     }
 }
 
+struct tfidfPair {
+    std::string word;
+    double value;
+    tfidfPair(std::string word, double value) : word(word), value(value) {};
+
+};
+
 int main(int argc, char* argv[]) {
     if (argc != 4) {
         return 1;
     }
     std::string a(argv[2]);
-    std::ifstream corpus(argv[1]);
-    std::istream_iterator<std::string> corpus_it(corpus), eof;
+    std::ifstream corpus(argv[1]);    std::istream_iterator<std::string> corpus_it(corpus), eof;
     std::vector<std::string> fileList(corpus_it, eof);
     std::unordered_map<std::string, int> corpusMap, documentMap;
     for (uint i = 0; i < fileList.size(); i++) {
         tfid(a, corpusMap, fileList[i], documentMap);
     }
-    std::map<double, std::string> result;
+    std::vector<tfidfPair> result(documentMap.size(), tfidfPair("",0));
+    int count = 0;
     for (auto kv : documentMap) {
-        double x = (kv.second * (log((double)fileList.size() / corpusMap.at(kv.first)) / log(10.0)));
+        double x = (kv.second *
+                    (log((double)fileList.size() /
+                         corpusMap.at(kv.first)) / log(10.0)));
         if (x != 0.0) {
-            result[x] = kv.first;
+            result[count++] = tfidfPair(kv.first, x);
         }
     }
-    int count = 0;
-    for (auto it = result.rbegin(); count < 10; it++, count++) {
-        std::cout << it->first << " " << it->second << std::endl;
-    }
-    
+    std::sort(result.begin(), result.end(), [](tfidfPair a, tfidfPair b) {
+            return a.value > b.value;
+        });
+    std::for_each(result.begin(), result.begin() + 10, [](tfidfPair a) {
+            std::cout << a.word << " " << a.value << std::endl;
+        });
     return 0;
 }
