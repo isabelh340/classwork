@@ -3,23 +3,28 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+using namespace std;
+
 #include <math.h>
+
 #include <glm/glm.hpp>
 
+using namespace glm;
 
-std::string toString(glm::vec2 v)
+string toString(vec2 v)
 {
 	return "[ " + std::to_string(v.x) + ", " + std::to_string(v.y) + " ]";
 }
 
-std::string toString(glm::vec3 v)
+string toString(vec3 v)
 {
 	return "[ " + std::to_string(v.x) + ", " + 
 			      std::to_string(v.y) + ", " + 
 				  std::to_string(v.z) + " ]";
 }
 
-std::string toString(glm::vec4 v)
+string toString(vec4 v)
 {
 	return "[ " + std::to_string(v.x) + ", " + 
 				  std::to_string(v.y) + ", " + 
@@ -27,13 +32,13 @@ std::string toString(glm::vec4 v)
 				  std::to_string(v.w)+ " ]";
 }
 
-std::string toString(glm::mat2 m)
+string toString(mat2 m)
 {   
-	std::string s = "\n";
+	string s = "\n";
 
-	for (int row = 0; row < 2; row++) {
-		s+= "|\t";
-		for (int col = 0; col < 2 ; col++) {
+	for (int col = 0; col < 2 ; col++) {
+			s+= "|\t";
+		for (int row = 0; row < 2; row++) {
 			s+= std::to_string(m[row][col]) + "\t";
 		}
 		s+= "\t|\n";
@@ -43,13 +48,13 @@ std::string toString(glm::mat2 m)
 	return s;
 }
 
-std::string toString(glm::mat3 m)
+string toString(mat3 m)
 {   
-	std::string s = "\n";
-
-	for (int row = 0; row < 3; row++) {
+	string s = "\n";
+	for (int col = 0; col < 3 ; col++) {
+	 {
 		s+= "|\t";
-		for (int col = 0; col < 3 ; col++) {
+		for (int row = 0; row < 3; row++)	
 			s+= std::to_string(m[row][col]) + "\t";
 		}
 		s+= "\t|\n";
@@ -59,13 +64,12 @@ std::string toString(glm::mat3 m)
 	return s;
 }
 
-std::string toString(glm::mat4 m)
+string toString(mat4 m)
 {   
-	std::string s = "\n";
-
-	for (int row = 0; row < 4; row++) {
+	string s = "\n";
+	for (int col = 0; col < 4 ; col++) {
 		s+= "|\t";
-		for (int col = 0; col < 4 ; col++) {
+		for (int row = 0; row < 4; row++) {
 			s+= std::to_string(m[row][col]) + "\t";
 		}
 		s+= "\t|\n";

@@ -247,32 +247,30 @@ void problem12() {
 void problem13() {
 	GLubyte white[] = {128, 128, 128};
 	GLubyte blue[] = {0, 0, 255};
-	const int NUMBER_OF_2D_HOMOGENOUS = 3;
-	// I hate visual studio.
-	std::vector<glm::vec3> transMatrix;
-	transMatrix.push_back(glm::vec3(1,0,100));
-	transMatrix.push_back(glm::vec3(0,1,125));
-	transMatrix.push_back(glm::vec3(0,0,1));
 
-	glm::vec3 p1(50,75,1),p2(130,200,1), shiftP1(0,0,0), shiftP2(0,0,0);
-	BresLineHomogenous(p1,p2,blue);
-	for (int i = 0; i < transMatrix.size(); i++) {
-		int temp = 0;
-		for (int j = 0; j < NUMBER_OF_2D_HOMOGENOUS; j++) {
-			temp += transMatrix[i][j] * p1[j]; 
-		}
-		shiftP1[i] = temp;
-		temp = 0;
-		for (int j = 0; j < NUMBER_OF_2D_HOMOGENOUS; j++) {
-			temp += transMatrix[i][j] * p2[j]; 
-		}
-		shiftP2[i] = temp;
-	}
-	BresLineHomogenous(shiftP1,shiftP2,white);
+	glm::vec3 p1(50,75,1),p2(130,200,1);
+	glm::mat3 trans(1,0,0,
+					0,1,0,
+					100, 125,1);
+	p1 = trans * p1;
+	p2 = trans * p2;
+
+	BresLineHomogenous(p1,p2,white);
 }
 
 void problem14() {
-	
+	GLubyte green[] = {0,255,0};
+	glm::vec2 v1(0,0), v2(200,0);
+	BresLine(v1, v2, green);
+	double angle = glm::radians(35.0);
+
+	glm::mat2 m(glm::cos(angle),glm::sin(angle),
+			   -1 * glm::sin(angle), glm::cos(angle));
+
+	v1 = m  * v1;
+	v2 = m * v2;
+
+	BresLine(v1,v2,green);
 }
 
 void drawTriangle(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, GLubyte rgb[]) {
@@ -289,18 +287,6 @@ void problem15() {
 	glm::vec3 v1(100,200,1), v2(200,300,1), v3(300,200,1);
 	drawTriangle(v1,v2,v3, red);
 	double angle = glm::radians(30.0);
-	/*glm::mat3x3 rotationMatrix;
-	rotationMatrix[0] = glm::vec3(glm::cos(angle),glm::sin(angle), 0.0);
-	rotationMatrix[1] = glm::vec3(-1 * glm::sin(angle), glm::cos(angle), 1.0);
-	rotationMatrix[2] =	glm::vec3(0.0, 0.0, 1.0);
-	*/
-
-
-	glm::vec3 midPoint(((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
-	// std::cout << toString(midPoint) << std::endl;
-	//v1 -= midPoint;
-	//v2 -= midPoint;
-	//v3 -= midPoint;
 	
 	glm::mat3x3 m(glm::cos(angle),glm::sin(angle), 0,
 			   -1 * glm::sin(angle), glm::cos(angle), 0,
@@ -309,10 +295,6 @@ void problem15() {
 	v1 = m * v1;
 	v3 = m * v3;
 	v2 = m * v2;
-	//v1 += midPoint;
-	//v2 += midPoint;
-	//v3 += midPoint;
-	std::cout << toString(v1) << " " << toString(v2) << " " << toString(v3) << std::endl;
 
 	drawTriangle(v1,v2,v3, cyan);
 }
@@ -322,53 +304,67 @@ void problem15() {
 void problem16() {
 	GLubyte magenta[] = {255,0,255};
 	glm::vec3 v1(100,200,1), v2(200,300,1), v3(300,200,1);
-	//drawTriangle(v1,v2,v3, red);
 	double angle = glm::radians(45.0);
 
-	glm::mat3 mat(glm::cos(angle),glm::sin(angle), 0,
+	glm::mat3 rotation(glm::cos(angle),glm::sin(angle), 0,
 			      -1 * glm::sin(angle), glm::cos(angle), 0,
 			      0, 0, 1);
 
-	//glm::vec3 midPoint(((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
-	glm::vec3 midPoint(200,200,1);
-	v1 -= midPoint;
-	v2 -= midPoint;
-	v3 -= midPoint;
+	glm::vec3 mid(200,200,1);
 
-	v1 = mat * v1;
-	v2 = mat * v2;
-	v3 = mat * v3;
+	glm::mat3 trans(1,0,0,
+					0,1,0,
+					mid.x,mid.y,1);
+	glm::mat3 oTrans(1,0,0,
+					0,1,0,
+					-1*mid.x,-1*mid.y,1);
+	
+	// translate to origin
+	v1 = oTrans * v1;
+	v2 = oTrans * v2;
+	v3 = oTrans * v3;
 
-	v1 += midPoint;
-	v2 += midPoint;
-	v3 += midPoint;
+	// rotation
+	v1 = rotation * v1;
+	v2 = rotation * v2;
+	v3 = rotation * v3;
+
+	// translate to the axis point
+	v1 = trans * v1;
+	v2 = trans * v2;
+	v3 = trans * v3;
 	
 	drawTriangle(v1,v2,v3, magenta);
 }
 
 void problem17() {
-	GLubyte yellow[] = {255,255,0};
+	GLubyte yellow[] = {200,200,0};
 	glm::vec3 v1(100,200,1), v2(200,300,1), v3(300,200,1);
-	//drawTriangle(v1,v2,v3, red);
 	double angle = glm::radians(90.0);
 
-	glm::mat3 mat(glm::cos(angle),glm::sin(angle), 0,
+	glm::mat3 rotation(glm::cos(angle),glm::sin(angle), 0,
 			      -1 * glm::sin(angle), glm::cos(angle), 0,
 			      0, 0, 1);
-
-	glm::vec3 midPoint(((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
+	glm::vec3 mid(((v1.x + v2.x + v3.x) / 3.0), ((v1.y + v2.y + v3.y) / 3.0), 1);
+	glm::mat3 trans(1,0,0,
+					0,1,0,
+					mid.x,mid.y,1);
+	glm::mat3 oTrans(1,0,0,
+					0,1,0,
+					-1*mid.x,-1*mid.y,1);
 	
-	v1 -= midPoint;
-	v2 -= midPoint;
-	v3 -= midPoint;
+	// trans to origin
+	v1 = oTrans * v1;
+	v2 = oTrans * v2;
+	v3 = oTrans * v3;
 
-	v1 = mat * v1;
-	v2 = mat * v2;
-	v3 = mat * v3;
+	v1 = rotation * v1;
+	v2 = rotation * v2;
+	v3 = rotation * v3;
 
-	v1 += midPoint;
-	v2 += midPoint;
-	v3 += midPoint;
+	v1 = trans * v1;
+	v2 = trans * v2;
+	v3 = trans * v3;
 	
 	drawTriangle(v1,v2,v3, yellow);
 }
@@ -406,9 +402,10 @@ static void RenderSceneCB() {
 
 	// TODO
 	// Your rendering code
-	//problem12();
-	//problem12();
-	//problem13();
+	problem12();
+	problem12();
+	problem13();
+	problem14();
 	problem15();
 	problem16();
 	problem17();
