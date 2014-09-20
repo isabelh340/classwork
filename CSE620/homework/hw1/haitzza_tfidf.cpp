@@ -1,0 +1,184 @@
+// Copyright 2014 Zach Haitz
+
+#include <set>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iterator>
+#include <algorithm>
+#include <functional>
+#include <string>
+#include <unordered_map>
+#include <cmath>
+#include <map>
+#include <utility>
+
+typedef std::unordered_map<std::string, int> strIntMap;
+typedef std::pair<std::string, int> strIntPair;
+
+/*
+  returns a cleaned string, i.e. one that contains only alpabet chars or -
+*/
+std::string cleanAndCheck(std::string& str, const bool convertLower) {
+    if (convertLower) {
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    }
+    if (str.substr(0, 4) == "http"
+        || std::any_of(str.begin(), str.end(), ::isdigit)) {
+        return "";
+    }
+    auto myIsAlpha = [](char& c) { return (c == '-' || isalpha(c)); };
+    std::string res;
+    std::copy_if(str.begin(), str.end(), std::back_inserter(res), myIsAlpha);
+    return res;
+}
+
+/*
+  Counts the words in the given file. Stores in the given hashmap
+  @param corpusMap - the map for the word count
+  @param currentCorpusFile - the current file we are examining
+*/
+void wordCount(strIntMap& corpusMap,
+               const std::string& currentCorpusFile) {
+    strIntMap currMap;
+    std::ifstream currentCorpus(currentCorpusFile);
+    std::istream_iterator<std::string> cc_it(currentCorpus), eof;
+    // iterate through the words in the current file and add them to currmap
+    std::for_each(cc_it, eof, [&currMap](std::string a) {
+            currMap[cleanAndCheck(a, true)]++;
+        });
+
+    // take the current document map and add it to the total for the corpus
+    std::for_each(currMap.begin(), currMap.end(), [&corpusMap](strIntPair a) {
+            corpusMap[a.first] += a.second;
+        });
+}
+
+// a simple datastructure to store a word and its tfidf value
+struct tfidfPair {
+    std::string word;
+    double value;
+    tfidfPair(std::string word, double value) : word(word), value(value) {}
+
+    // override this for use of set
+    bool operator<(const tfidfPair &o) const {
+        return this->value > o.value;
+    }
+};
+
+int countForWord(std::string& str, std::set<tfidfPair>& set) {
+    int count = 0;
+    for (tfidfPair tPair : set) {
+        if (str.find(tPair.word) != std::string::npos) {
+            count++;
+            set.erase(tPair);
+        }
+    }
+    return count;
+}
+
+/*
+  Counts the significant words per line in the given search file
+*/
+void countSigWords(const std::string searchFile,
+                   const std::set<tfidfPair> result) {
+    std::ifstream search(searchFile);
+    std::string line, currWord;
+    int lineNumber = 1;  // start at one, because logic
+    // get line by line
+    while (std::getline(search, line)) {
+        std::istringstream ss(line);
+        // store into set because dups ain't no thang
+        std::set<std::string> wordSet;
+        std::set<tfidfPair>tempSet(result);
+        // store cleaned versions of words into set
+        while (ss >> currWord != NULL) {
+            wordSet.insert(currWord);
+        }
+        std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+        // get the count for the words in result that are also in wordset
+        int c = 0;
+        for (std::string resWord : wordSet) {
+            c += countForWord(resWord, tempSet);
+        }        
+        if (c > 1) { 
+            std::cout << lineNumber << "[" << c << "]: " << line
+                      << std::endl;
+        }
+        lineNumber++;
+    }
+}
+
+// the twfid calculation
+double twfid(double docCount, double fileCount, double corpCount) {
+    return docCount * (log(fileCount / corpCount) / log(10.0));
+}
+
+
+// helper method to insert into a set, keeping the size
+// at size because why store stuff we don't care about
+void insertIntoSet(std::set<tfidfPair>& set,
+                           const tfidfPair& toInsert, uint size) {
+    // storing the tfidf in sorted order, so if we see something
+    // that is greater than the lowest in set, we pop that bad boy off and
+    // insert the new one
+    if (set.size() == size) {
+        auto endIt = --set.end();
+        if (toInsert.value > endIt->value) {
+            set.erase(*endIt);
+        }
+    }
+    if (set.size() < size) {
+        set.insert(toInsert);
+    }
+}
+
+// gets the topN significant words and stores them in a set
+void getTopN(const uint topN, const int fileCount,
+             std::set<tfidfPair>& set, const strIntMap& documentMap,
+             const strIntMap& corpusMap) {
+    std::for_each(documentMap.begin(), documentMap.end(), [&](strIntPair a) {
+            double x = twfid(a.second, fileCount, corpusMap.at(a.first));
+            insertIntoSet(set, tfidfPair(a.first, x), topN);
+        });
+}
+
+// prints the values in the set
+void printTopN(std::set<tfidfPair>& set) {
+    std::for_each(set.begin(), set.end(), [](tfidfPair a) {
+            std::cout << a.word << ": " << a.value << std::endl;
+        });
+}
+
+// method to load data for corpus and search files
+void loadCorpusAndSearchFiles(strIntMap& corpMap, strIntMap& docMap,
+                              std::string searchFile,
+                              std::vector<std::string> fileList) {
+    std::for_each(fileList.begin(), fileList.end(), [&](std::string currFile) {
+            wordCount(corpMap, currFile);
+        });
+    wordCount(docMap, searchFile);
+}
+
+int main(int argc, char* argv[]) {
+    std::string searchFile(argv[2]);
+    uint topN(std::stoi(argv[3]));
+    std::ifstream corpus(argv[1]);
+    std::istream_iterator<std::string> corpus_it(corpus), eof;
+    std::vector<std::string> fileList(corpus_it, eof);
+    strIntMap corpusMap, documentMap;
+    std::cout << "Loading corpus using files listed in " << argv[1]
+              << std::endl;
+    loadCorpusAndSearchFiles(corpusMap, documentMap, searchFile, fileList);
+    std::cout << "Loaded corpus of " << corpusMap.size() << " words from "
+              << fileList.size() << " file(s)" << std::endl
+              << "------[ Starting analysis ]------" << std::endl << "Top "
+              << topN << " significant words..." << std::endl;
+    std::set<tfidfPair> result;
+    getTopN(topN, fileList.size(), result, documentMap, corpusMap);
+    printTopN(result);
+    std::cout << "Lines with 1 or more significant words:" << std::endl;
+    countSigWords(searchFile, result);
+    return 0;
+}

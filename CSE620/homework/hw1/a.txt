@@ -1,0 +1,15 @@
+Loading corpus using files listed in prog_paradigm_corpus.txt
+Loaded corpus of 16722 words from 110 file(s)
+------[ Starting analysis ]------
+Top 9 significant words...
+cufp 9.78435
+fibonacci 7.52693
+higher-order 6.85774
+combinatory 6.31621
+pure 6.1824
+burstall 5.98147
+fibonaccin 5.75733
+fibrecurrence 5.75733
+first-class 5.50031
+lines with more than one sig word 
+249[2]	   that higher-order functions and first-class functions both allow

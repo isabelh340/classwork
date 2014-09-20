@@ -1,0 +1,39 @@
+Loading corpus using files listed in constitution_corpus.txt
+Loaded corpus of 62356 words from 296 file(s).
+------[ Starting analysis ]------
+Top 10 significant words...
+searches: 23.7016
+probable: 22.639
+exclusionary: 19.2148
+seizure: 14.735
+arrest: 14.4944
+expectation: 13.6493
+suspicion: 13.5464
+landynski: 13.2416
+seizures: 12.0019
+warrants: 11.93
+Lines with 1 or more significant words:
+84[2]:    and seizures and requires any warrant to be judicially sanctioned and
+102[2]:    under the fourth amendment, search and seizure (including arrest)
+107[2]:    "seizure"; what constitutes probable cause for these actions; and how
+158[3]:      papers, and effects,^[a] against unreasonable searches and seizures,
+178[3]:    conduct searches and seizures under certain conditions when their
+266[3]:      searches, and seizures of his person, his houses, his papers, and
+273[2]:      search, arrest, or seizure: and no warrant ought to be issued but in
+378[2]:    offended by "general warrants" and laws that allows searches to be
+383[2]:    seizures is to safeguard the privacy and security of individuals
+388[2]:    rule under the fourth amendment is that arrests and "searches conducted
+402[3]:    the amendment applies to governmental searches and seizures, but not
+478[2]:    short of probable cause necessary for an arrest. under terry v. ohio
+480[2]:    warrantless search on a level of suspicion less than probable cause
+536[2]:    arrest.^[61] if a person is not under suspicion of illegal behavior, a
+542[2]:    arresting officer has probable cause.^[63]^[64] in maryland v. king
+581[2]:    seizures without a warrant are not considered unreasonable if one of
+602[2]:    the standards of probable cause differ for an arrest and a search. the
+603[2]:    government has a probable cause to make an arrest when "the facts and
+765[2]:    or seizure without a warrant as an incident to a lawful arrest has
+780[2]:    supreme court decisions permitting searches incident to an arrest
+822[3]:    unreasonable searches and seizures nonetheless apply to the contents of
+1050[2]:        unreasonable seizures would be no less transgressed if the seizure
+1168[2]:        border seizures of electronic files: the overextension of the
+1474[2]:      * searches and seizures
