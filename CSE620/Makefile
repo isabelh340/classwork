@@ -12,7 +12,7 @@
 
 CXX=g++
 CXXFLAGS=-std=c++11 -Wall -g -Wextra
-LIBS=-lm -lpthread
+LIBS=-lm -lpthread -lOpenCL
 
 # Target exectuable name if SRC is defined
 ifdef SRC
