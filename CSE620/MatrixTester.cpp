@@ -19,9 +19,9 @@ void staticTests() {
     std::cout << "Matrix a:\n" << a
               << "Matrix b:\n" << b;
     // Multiplication and copy-constructor test
-        Matrix c = b * a;
+    Matrix c = b * a;
     // Test of stream insertion operator.
-    std::cout << "c = b * a:\n" << c;
+    std::cout << "c = b * a:\n" << c.setFormat(3,1);
     // Test of column insert operator
     c = (c >> 3);
     std::cout << "After inserting 3 columns, Matrix c = \n" << c;
@@ -30,7 +30,7 @@ void staticTests() {
               << (c = c << 2);
     // Test of copy constructor and scalar multiplication & division
     Matrix d = (a * 4) / 2.5;
-    std::cout << "(a * 4) / 2.5:\n" << d;
+    std::cout << "(a * 4) / 2.5:\n" << d.setFormat(6,2);
     // Test compound scalar operations on matrices
     d /= 2.5;  // Do compound division.
     std::cout << "d /= 2.5:\n" << d;
