@@ -19,10 +19,10 @@ int main() {
         std::cout << platHeaders[2] << "\t:"
                   << platformList[i].getInfo<CL_PLATFORM_VERSION>()
                   << std::endl;
-        cl_device_type devType = CL_DEVICE_TYPE_GPU;
+
         std::vector<cl::Device> deviceList;
-        platformList[i].getDevices(devType, &deviceList);
-        std::cout << platHeaders[4] << "\t:" << deviceList.size() << std::endl;
+        platformList[i].getDevices(CL_DEVICE_TYPE_ALL, &deviceList);
+        std::cout << platHeaders[3] << "\t:" << deviceList.size() << std::endl;
     }
     
     return 0;
