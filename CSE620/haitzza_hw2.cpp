@@ -1,16 +1,20 @@
-#include "haitzza_hw2.h"
+// Copyright 2014 Zach Haitz
+#include "./haitzza_hw2.h"
 #include <algorithm>
 #include <iomanip>
 #include <functional>
 #include <numeric>
+#include <vector>
 
 Matrix::Matrix() {
-    this->mat = twoDimVec(1.0, std::vector<double>(1.0,0));
+    this->mat = twoDimVec(1.0, std::vector<double>(1.0, 0));
+    this->width = 8;
+    this->precision = 0;
 }
 
 Matrix::Matrix(double rows, double cols) {
     this->mat = twoDimVec(rows, std::vector<double>(cols));
-    this->width = 0;
+    this->width = 8;
     this->precision = 0;
 }
 
@@ -34,7 +38,6 @@ Matrix Matrix::operator-(const Matrix& right) const {
 
 Matrix Matrix::operator*(const Matrix& right) const {
     Matrix a(this->mat.size(), right.mat[0].size());
-    std::cout << this->mat[0].size() << " " << right.mat.size() << std::endl;
     for (uint i = 0; i < this->mat.size(); i++) {
         for (uint j = 0; j < right.mat[0].size(); j++) {
             a.mat[i][j] = 0;
@@ -102,16 +105,18 @@ Matrix Matrix::operator<<(const int shiftVal) const {
     return a;
 }
 
-std::string Matrix::setFormat(int width, int precision) {
+Matrix& Matrix::setFormat(int width, int precision) {
     this->width = width;
     this->precision = precision;
-    return "";
+    return *this;
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix& mat) {
+    os << std::setw(mat.width) << std::setprecision(mat.precision);
     for (uint i = 0; i < mat.mat.size(); i++) {
         for (uint j = 0; j < mat.mat[0].size(); j++) {
-            os << mat.mat[i][j] << " ";
+            os <<mat.mat[i][j] <<
+                std::setw(mat.width) << std::setprecision(mat.precision);;
         }
         os << std::endl;
     }
@@ -130,7 +135,8 @@ std::istream& operator>>(std::istream& is, Matrix& matrix) {
     return is;
 }
 
-Matrix Matrix::scalarHelp(const double& right, std::function<double(double x, double y)> op) const {
+Matrix Matrix::scalarHelp(const double& right,
+                          std::function<double(double x, double y)> op) const {
     Matrix a(*this);
     for (uint i = 0; i < this->mat.size(); i++) {
         for (uint j = 0; j < this->mat[0].size(); j++) {
@@ -140,10 +146,11 @@ Matrix Matrix::scalarHelp(const double& right, std::function<double(double x, do
     return a;
 }
 
-Matrix Matrix::addSubHelp(const Matrix& right, std::function<double(double x, double y)> op) const {
+Matrix Matrix::addSubHelp(const Matrix& right,
+                          std::function<double(double x, double y)> op) const {
     if (this->mat.size() != right.mat.size() ||
         this->mat[0].size() != right.mat[0].size()) {
-        return Matrix(0,0);
+        return Matrix(0, 0);
     }
     Matrix a(this->mat.size(), this->mat[0].size());
     for (uint i = 0; i < a.mat.size(); i++) {
