@@ -18,8 +18,8 @@
 const std::string kernelSrc =
      "#pragma OPENCL EXTENSION cl_khr_fp64 : enable \n"
       "__kernel void \n"
-      "vadd (__global float * a, __global float * b,"
-      "__global float * c) { \n"
+      "vadd (__global double * a, __global double * b,"
+      "__global double * c) { \n"
       "size_t i = get_global_id(0);\n"
       "c[i] = a[i] + b[i];\n}";
 
