@@ -1,0 +1,181 @@
+// Copyright 2014 Zach Haitz
+#include "./haitzza_hw2.h"
+#include <algorithm>
+#include <iomanip>
+#include <functional>
+#include <numeric>
+#include <vector>
+
+// default constructor. creates a 1x1 matrix with
+// 8 width and 0 precision for formatting
+Matrix::Matrix() {
+    this->mat = twoDimVec(1.0, std::vector<double>(1.0, 0));
+    this->width = 8;
+    this->precision = 0;
+}
+
+// given a number of rows, and cols, creates a rows by cols matrix
+// inits width and precision to 8 and 0, respectively
+Matrix::Matrix(double rows, double cols) {
+    this->mat = twoDimVec(rows, std::vector<double>(cols));
+    this->width = 8;
+    this->precision = 0;
+}
+
+// copy constructor
+Matrix::Matrix(const Matrix& other) {
+    this->mat = other.mat;
+    this->width = other.width;
+    this->precision = other.precision;
+}
+
+// return the value at row col. can't be const because
+// we can change the value in the matrix
+double& Matrix::operator()(int row, int col) {
+    return mat[row][col];
+}
+
+// adds two matrices
+Matrix Matrix::operator+(const Matrix& right) const {
+    return addSubHelp(right, std::plus<double>());
+}
+
+// subtracts two matrices
+Matrix Matrix::operator-(const Matrix& right) const {
+    return addSubHelp(right, std::minus<double>());
+}
+
+// multiplies two matrices... not a strassen algorithm :(
+Matrix Matrix::operator*(const Matrix& right) const {
+    Matrix a(this->mat.size(), right.mat[0].size());
+    for (uint i = 0; i < this->mat.size(); i++) {
+        for (uint j = 0; j < right.mat[0].size(); j++) {
+            a.mat[i][j] = 0;
+            for (uint k = 0; k < this->mat[0].size(); k++) {
+                a.mat[i][j] += this->mat[i][k] * right.mat[k][j];
+            }
+        }
+    }
+    return a;
+}
+
+// multiplies all values by some scalar
+Matrix Matrix::operator*(const double scalar) const {
+    return scalarHelp(scalar, std::multiplies<double>());
+}
+
+// divides all values by some scalar
+Matrix Matrix::operator/(const double scalar) const {
+    return scalarHelp(scalar, std::divides<double>());
+}
+
+// modifies this by multiplying this by some scalar
+// wasn't able to reuse the scalarHelper because const vs non-const
+Matrix& Matrix::operator*=(const double scalar) {
+    for (uint i = 0; i < this->mat.size(); i++) {
+        for (uint j = 0; j < this->mat[0].size(); j++) {
+            this->mat[i][j] = this->mat[i][j] * scalar;
+        }
+    }
+    return *this;
+}
+
+// modifies this matrix by dividing by some scalar
+Matrix& Matrix::operator/=(const double scalar) {
+    for (uint i = 0; i < this->mat.size(); i++) {
+        for (uint j = 0; j < this->mat[0].size(); j++) {
+            this->mat[i][j] = this->mat[i][j] / scalar;
+        }
+    }
+    return *this;
+}
+
+Matrix& Matrix::thisScalarHelper(std::function<double(double x, double y)> op) {
+    
+}
+
+Matrix Matrix::operator~() const {
+    Matrix a(this->mat[0].size(), this->mat.size());
+    for (uint i = 0; i < this->mat.size(); i++) {
+        for (uint j = 0; j < this->mat[0].size(); j++) {
+            a.mat[j][i] = this->mat[i][j];
+        }
+    }
+    return a;
+}
+
+Matrix Matrix::operator>>(const int shiftVal) const {
+    Matrix a(*this);
+    for (uint j = 0; j < a.mat.size(); j++) {
+        for (int i = 0; i < shiftVal; i++) {
+            a.mat[j].insert(a.mat[j].begin(), 0.0);
+        }
+    }
+    return a;
+}
+
+Matrix Matrix::operator<<(const int shiftVal) const {
+    Matrix a(*this);
+    for (uint j = 0; j < a.mat.size(); j++) {
+        for (int i = 0; i < shiftVal; i++) {
+            a.mat[j].erase(a.mat[j].begin(), a.mat[j].begin()+1);
+        }
+    }
+    return a;
+}
+
+Matrix& Matrix::setFormat(int width, int precision) {
+    this->width = width;
+    this->precision = precision;
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const Matrix& mat) {
+    os << std::setw(mat.width) << std::setprecision(mat.precision);
+    for (uint i = 0; i < mat.mat.size(); i++) {
+        for (uint j = 0; j < mat.mat[0].size(); j++) {
+            os <<mat.mat[i][j] <<
+                std::setw(mat.width) << std::setprecision(mat.precision);;
+        }
+        os << std::endl;
+    }
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Matrix& matrix) {
+    int rows, cols;
+    is >> rows >> cols;
+    matrix = Matrix(rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            is >> matrix.mat[i][j];
+        }
+    }
+    return is;
+}
+
+Matrix Matrix::scalarHelp(const double& right,
+                          std::function<double(double x, double y)> op) const {
+    Matrix a(*this);
+    for (uint i = 0; i < this->mat.size(); i++) {
+        for (uint j = 0; j < this->mat[0].size(); j++) {
+            a.mat[i][j] = op(a.mat[i][j], right);
+        }
+    }
+    return a;
+}
+
+Matrix Matrix::addSubHelp(const Matrix& right,
+                          std::function<double(double x, double y)> op) const {
+    if (this->mat.size() != right.mat.size() ||
+        this->mat[0].size() != right.mat[0].size()) {
+        return Matrix(0, 0);
+    }
+    Matrix a(this->mat.size(), this->mat[0].size());
+    for (uint i = 0; i < a.mat.size(); i++) {
+        for (uint j = 0; j < a.mat[0].size(); j++) {
+            a.mat[i][j] = op(this->mat[i][j], right.mat[i][j]);
+        }
+    }
+    return a;
+}
