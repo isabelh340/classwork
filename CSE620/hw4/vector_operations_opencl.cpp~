@@ -1,0 +1,114 @@
+// Copyright 2014 raodm@miamioh.edu
+
+#include "vector_operations.h"
+#define __CL_ENABLE_EXCEPTIONS
+#include "CL/cl.hpp"
+
+#include <vector>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
+#include <algorithm>
+#include <functional>
+
+std::string kernelStart =
+    "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                  \n"
+    "__kernel void                                                 \n"
+    "vadd(__global float* a, __global float* b, __global float* c) {  \n"
+    "    size_t i = get_global_id( 0);                             \n";
+std::string kernelEnd =
+    "}                                                             \n";
+
+const std::string add     = "c[i] = a[i] + b[i];\n";
+const std::string sub     = "c[i] = a[i] - b[i];\n";
+const std::string mult    = "c[i] = a[i] * b[i];\n";
+const std::string divides = "c[i] = a[i] / b[i];\n";
+
+cl::Kernel
+getKernel(std::vector<cl::Device>& deviceList, cl::Context& context,
+          const std::string& sourceCode, const std::string& entryFunc) {
+    // Create the program from source for given device    
+    cl::Program::Sources sources(1, std::make_pair(sourceCode.c_str(), 0));
+    cl::Program program(context, sources);
+    // Build Open CL program for a given device
+    try {
+        program.build(deviceList);
+    } catch (cl::Error error) {
+        std::cout << "Build log:" << std::endl
+                  << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(deviceList[0])
+                  << std::endl;
+        throw error;
+    }
+    // Create and return a kernel
+    cl::Kernel kernel(program, entryFunc.c_str());
+    return kernel;
+}
+
+NumList
+mathViaOpenCL(cl::Context& context, cl::CommandQueue& queue,
+             cl::Kernel& kernel, 
+             cl::KernelFunctor& vadd, const std::vector<Type>& vec1,
+             const std::vector<Type>& vec2) {
+    const int ROFlags  = CL_MEM_READ_ONLY  | CL_MEM_COPY_HOST_PTR;
+    const int RWFlags  = CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR;
+    const int byteSize = vec1.size() * sizeof(double);
+    // Create buffer for vec1 and vec2 and copy host contents
+    cl::Buffer vec1Buffer = cl::Buffer(context, ROFlags, byteSize,
+                                       const_cast<float*>(&vec1[0]));
+    cl::Buffer vec2Buffer = cl::Buffer(context, ROFlags, byteSize,
+                                       const_cast<float*>(&vec2[0]));
+    // Create buffer for result vector
+    NumList result(vec1.size());
+    cl::Buffer resBuffer = cl::Buffer(context, RWFlags, byteSize, &result[0]);
+    // Run the OpenCL kernel via the functor
+    vadd(vec1Buffer, vec2Buffer, resBuffer);
+    // Sync the OpenCL buffer with the host buffers
+    queue.enqueueMapBuffer(resBuffer, CL_TRUE, CL_MAP_READ, 0, byteSize);
+    return result;
+}
+
+                                 
+NumList openCLMath(NumList vec1,
+                   NumList vec2, 
+                   const std::string& operation) {
+    // Discover OpenCl platforms available on host
+    std::vector<cl::Platform> platformList;
+    cl::Platform::get(&platformList);
+    // Pick the first platform and query its GPU devices
+    std::vector<cl::Device> deviceList;
+    platformList[1].getDevices(CL_DEVICE_TYPE_GPU, &deviceList);
+    // Create a context for the devices and use the first device to create
+    // a command-queue.
+    cl::Context context       = cl::Context(deviceList);
+    cl::CommandQueue queue    = cl::CommandQueue(context, deviceList[0]);
+    // Build and get kernel for the devices
+    cl::Kernel kernel = getKernel(deviceList, context,
+                                  kernelStart + operation + kernelEnd, "vadd");
+    // Build a kernel functor
+    cl::KernelFunctor vadd(kernel, queue, cl::NullRange,
+                           cl::NDRange(vec1.size()), cl::NullRange);
+    // Run the kernel and obtain results
+    return mathViaOpenCL(context, queue, kernel, vadd, vec1, vec2);
+}
+
+// Unorthodox overload of operator+ for vectors.
+NumList operator+(const NumList& nl1, const NumList& nl2) {
+    return openCLMath(nl1, nl2, add);
+}
+
+// Unorthodox overload of operator- for vectors.
+NumList operator-(const NumList& nl1, const NumList& nl2) {
+    return openCLMath(nl1, nl2, sub);
+}
+
+// Unorthodox overload of operator* for vectors.
+NumList operator*(const NumList& nl1, const NumList& nl2) {
+    return openCLMath(nl1, nl2, mult);
+}
+
+// Unorthodox overload of operator* for vectors.
+NumList operator/(const NumList& nl1, const NumList& nl2) {
+    return openCLMath(nl1, nl2, divides);
+}
