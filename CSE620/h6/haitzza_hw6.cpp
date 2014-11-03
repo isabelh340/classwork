@@ -1,0 +1,86 @@
+// Copyright 2014 raodm@miamiOH.edu
+
+#include <stdexcept>
+#include <string>
+#include "ClCmdQueue.h"
+#include "BitmapImage.h"
+#include <fstream>
+#include <vector>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+// A couple of forward declarations to keep compiler happy
+int getDevType(const std::string& device) throw(std::runtime_error);
+
+BitmapImage
+clRotate(ClCmdQueue& queue, cl::KernelFunctor& rotate,
+         BitmapImage& srcImg, std::vector<float>& conData,
+         int conHeight, int conWidth) throw (cl::Error);
+
+std::vector<float> getConData(int& width, int& height, std::string& fname) {
+    std::ifstream in(fname);
+    std::istream_iterator<float> init(in), eof;
+    width = 7, height = 7;
+    std::vector<float> res(init, eof);
+    return res;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 4) {
+        std::cout << "Specify [CPU|GPU|ACC] <InputBMP> <OutputBMP> <Convolution>\n";
+        return 1;
+    }
+    // Load source image from the given file
+    BitmapImage srcImg;
+    srcImg.load(argv[2]);
+    int width, height;
+    std::string conFname(argv[4]);
+    std::vector<float> conData = getConData(width, height, conFname);
+    // Create the OpenCL command queue for a given device
+    ClCmdQueue queue(getDevType(argv[1]));
+    // Create a kernel and functor using OpenCL kernel code from a file.
+    cl::Kernel kernel = queue.loadKernel("haitzza_hw6.cl", "conv");
+    cl::NDRange globalRange(srcImg.getWidth(), srcImg.getHeight());
+    cl::KernelFunctor rotate(kernel, queue.getQueue(), cl::NullRange,
+                             globalRange, cl::NullRange);
+    BitmapImage outImg = clRotate(queue, rotate, srcImg, conData, width, height);
+    outImg.write(argv[3]);
+    return 0;
+}
+
+BitmapImage
+clRotate(ClCmdQueue& queue, cl::KernelFunctor& con,
+         BitmapImage& srcImg, std::vector<float>& conData,
+         int conHeight, int conWidth) throw (cl::Error) {
+    BitmapImage outImg;
+    outImg.resize(srcImg.getWidth(), srcImg.getHeight());
+    // Create the input, output image, and filter buffers!
+    cl::Image2D srcBuf = queue.makeImage(srcImg.getRow(0), srcImg.getWidth(),
+                                         srcImg.getHeight(), queue.ROFlags);
+    cl::Image2D outBuf = queue.makeImage(outImg.getRow(0), outImg.getWidth(),
+                                         outImg.getHeight(), queue.WOFlags);
+    cl::Buffer conBuf = queue.makeBuffer(&conData[0], conData.size() * sizeof(float),
+                                         queue.ROFlags);
+    // Setup sampler for source image to control sampler
+    cl::Sampler sampler(queue.getContext(), CL_FALSE, CL_ADDRESS_CLAMP,
+                        CL_FILTER_LINEAR);
+    // Now use the OpenCl kernel to perform convolution
+    con(srcBuf, outBuf, srcImg.getWidth(), srcImg.getHeight(), sampler,
+        conBuf, conHeight, conWidth);
+    // Copy result image back from the device to host.
+    queue.enqueueMapImage(outBuf);
+    // Return the resulting image back to the caller.
+    return outImg;
+}
+
+int getDevType(const std::string& device) throw(std::runtime_error) {
+    const std::string DevTypes = "CPUGPUACC";
+    switch (DevTypes.find(device)) {
+    case 0: return CL_DEVICE_TYPE_CPU;
+    case 3: return CL_DEVICE_TYPE_GPU;
+    case 6: return CL_DEVICE_TYPE_ACCELERATOR;
+    }
+    throw std::runtime_error("Invalid device type specified");
+}
+
+// End of source code

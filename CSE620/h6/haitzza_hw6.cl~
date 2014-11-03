@@ -1,0 +1,36 @@
+__kernel void conv(__read_only image2d_t srcImage,
+                  __write_only image2d_t outImage,
+                  int width, int height, sampler_t sampler,
+                  __global float* conData,
+                  int conWidth, int conHeight) {
+    const int2 coords = {get_global_id(0), get_global_id(1)};
+    uint4 pixel = read_imageui(srcImage, sampler, coords);
+    write_imageui(outImage, coords, pixel);
+    /*uint4 outPixel;
+      int conIdx = 0;
+      uint4 zeroPixel = {0,0,0,255};
+    int count;
+    for (int i = coords.x - conWidth / 2; i <= coords.x + conWidth / 2; i++) {
+        outPixel = zeroPixel;
+        if (i < 0 || i > width) {
+            continue;
+        }
+        for (int j = coords.y - conHeight / 2; j <= coords.y +  conHeight / 2; j++) {
+            if (j < 0 || j > height) {
+                continue;
+            }
+            if (conIdx == 0) {
+                conIdx++;
+                continue;
+            }
+            int2 currCords = {i, j};
+            pixel = read_imageui(srcImage, sampler, currCords);
+            
+            //            for (int k = 0; k < 4; k++) {
+            //  outPixel[k] += conData[conIdx] * pixel[k];
+            //}
+            // conIdx++;
+        }
+    }
+    */
+}
